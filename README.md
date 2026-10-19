@@ -1,15 +1,26 @@
 # 机票预订系统（C++ + MySQL 控制台版）
 
-一个可以直接编译运行的小型机票预订系统，按你本机的环境定制：
+一个可以直接编译运行的小型机票预订系统（C++17 控制台 + MySQL 8）。
 
-| 依赖 | 你机器上的实际配置 |
+| 依赖 | 要求 |
 | --- | --- |
-| 编译器 | Visual Studio 生成工具 2026 · MSVC 14.51（`cl.exe`）+ Windows SDK 10.0.26100 |
-| 数据库客户端 | MySQL Server 8.0 自带的 `mysql.h` / `libmysql.lib` / `libmysql.dll` |
-| 数据库服务 | MySQL 8.0，`127.0.0.1:3306`，服务名 `MySQL80` |
-| 项目位置 | `D:\Projects\FlightBooking` |
+| 编译器 | Visual Studio 2019/2022/2026 的 **生成工具**（含「使用 C++ 的桌面开发」工作负载，提供 `cl.exe` + `vcvars64.bat`） |
+| 数据库客户端库 | **MySQL Server 8.0+** 安装目录下的 `include\mysql.h`、`lib\libmysql.lib`、`lib\libmysql.dll`（MySQL Shell / Workbench 不含这些） |
+| 数据库服务 | MySQL 8.0+，默认 `127.0.0.1:3306` |
 
-不需要安装 .NET SDK、不需要 NuGet 拉包、不需要 Visual Studio 图形界面——全部离线可编译。
+不需要 .NET SDK、不需要 NuGet 拉包、不需要 Visual Studio 图形界面——全部离线可编译。
+
+**路径不用手改**：`build.bat` 会自动探测。找不到时可以用环境变量指定：
+
+```powershell
+set VCVARS64=C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Auxiliary\Build\vcvars64.bat
+set MYSQL_DIR=C:\Program Files\MySQL\MySQL Server 8.0
+```
+
+探测顺序：
+
+- **VS**：`VCVARS64` 环境变量 → 项目下 `tools\vcvars64.bat` → 用 `vswhere.exe` 查已安装的 C++ 工作负载 → 扫描 `%ProgramFiles%` / `%ProgramFiles(x86)%` 下的 Visual Studio 目录
+- **MySQL**：`MYSQL_DIR` 环境变量 → 常见路径（`Program Files\MySQL\MySQL Server 8.0/8.4/9.0`、`C:\MySQL\...`、`D:\MySQL\...`）→ 扫描 C/D/E/F 盘的 `Program Files\MySQL`、`MySQL`、`mysql` 目录，以 `include\mysql.h` 是否存在为准
 
 ---
 
@@ -53,10 +64,20 @@ password=admin123
 
 ### 第 3 步：编译并运行
 
-- 双击 **`build.bat`** → 调用 `vcvars64.bat` 初始化 MSVC，编译 `src\*.cpp`，自动把 `libmysql.dll`、`libcrypto-3-x64.dll`、`libssl-3-x64.dll` 和 `config.ini` 复制到 `bin\`
+- 双击 **`build.bat`** → 自动找到 `vcvars64.bat` 和 MySQL 客户端库 → 编译 `src\*.cpp` → 把 `libmysql.dll`、`libcrypto-3-x64.dll`、`libssl-3-x64.dll` 和 `config.ini` 复制到 `bin\`
 - 双击 **`run.bat`**（或直接运行 `bin\FlightBooking.exe`）
 
-编译成功的标志是看到 `[OK] ...\bin\FlightBooking.exe`。
+编译成功的标志是两行路径提示加一行 `[OK] ...\bin\FlightBooking.exe`：
+
+```
+[1/3] vcvars64 : C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Auxiliary\Build\vcvars64.bat
+[1/3] MySQL    : C:\Program Files\MySQL\MySQL Server 8.0
+[2/3] Compiling...
+[3/3] Copying runtime DLLs and config...
+[OK] ...\bin\FlightBooking.exe
+```
+
+探测失败时会明确告诉你缺什么、怎么用环境变量指定，而不是抛一堆 `cl 不是内部或外部命令`。
 
 ---
 
@@ -121,8 +142,8 @@ D:\Projects\FlightBooking
 | `Access denied for user 'flight'@'localhost'` | 还没执行 `schema.sql`，或 `config.ini` 里的密码和脚本里的不一致 |
 | `Unknown database 'flight_booking'` | 同上，库还没建 |
 | 双击 exe 一闪而过 / 提示找不到 DLL | 用 `run.bat` 启动，或确认 `bin\` 里有 `libmysql.dll`、`libcrypto-3-x64.dll`、`libssl-3-x64.dll` 三个文件 |
-| `[ERROR] vcvars64.bat not found` | 你的 VS 生成工具装在别处，改 `build.bat` 第 7 行的 `VCVARS` 路径 |
-| 编译报 `mysql.h` 找不到 | MySQL 服务端没装在 `D:\Program Files\MySQL\MySQL Server 8.0`，改 `build.bat` 里的 `MYSQL_ROOT` |
+| `[ERROR] Visual Studio C++ build tools not found` | 没装 VS 生成工具的 C++ 工作负载，或装在非常规位置：`set VCVARS64=<vcvars64.bat 全路径>` 后重试 |
+| `[ERROR] MySQL client headers not found` | 只装了 MySQL Shell/Workbench（不含 `mysql.h`）：装 MySQL Server 8.0+，或 `set MYSQL_DIR=<服务端目录>` 后重试 |
 | 控制台中文变乱码 | 终端字体不支持，换成「新宋体」或在 Windows Terminal 里运行 |
 
 ---
