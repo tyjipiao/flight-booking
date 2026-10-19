@@ -1,0 +1,20 @@
+# 编译产物
+bin/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.idb
+
+# 运行时
+_test_in.txt
+*.log
+
+# 本地配置（含数据库密码，不提交；用 config.example.ini 作模板）
+config.ini
+bin/config.ini
+
+# IDE
+.vs/
+*.user
+*.suo
